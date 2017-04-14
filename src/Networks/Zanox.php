@@ -291,7 +291,7 @@ class Zanox extends AbstractNetwork implements NetworkInterface
         ], $params);
         $products =  $this->_network->getProducts($_params);
         $set = ProductsResultset::createInstance();
-        if (!property_exists($products, 'productItems') || !property_exists($products->productItems, 'productItem'))
+        if (count($products) == 0 || (!property_exists($products, 'productItems') || !property_exists($products->productItems, 'productItem')))
         {
             return ProductsResultset::createInstance();
         }
