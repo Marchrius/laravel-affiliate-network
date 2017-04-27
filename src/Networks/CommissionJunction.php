@@ -33,21 +33,21 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
     /**
      * @method __construct
      */
-    public function __construct(string $username, string $passwordApi, string $idSite='')
+    public function __construct(string $username, string $password, string $passwordApi, string $idSite='')
     {
         $this->_network = new \Oara\Network\Publisher\CommissionJunction;
         $this->_username = $username;
-        $this->_password = $passwordApi;
+        $this->_password = $password;
         $this->_passwordApi = $passwordApi;
-        $this->_website_id = $website_id;
-        $this->login( $this->_username, $this->_password ,$idSite);
+        $this->_website_id = $idSite;
+        $this->login( $this->_username, $this->_password, $this->_passwordApi, $this->_website_id);
         // $this->_apiClient = \ApiClient::factory(PROTOCOL_JSON);
     }
 
     /**
      * @return bool
      */
-    public function login(string $username, string $password,string $idSite=''): bool
+    public function login(string $username, string $password, string $passwordApi, string $idSite=''): bool
     {
         $this->_logged = false;
         if (isNullOrEmpty( $username ) && isNullOrEmpty( $password )) {
@@ -56,10 +56,11 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
         }
         $this->_username = $username;
         $this->_password = $password;
-        $this->_passwordApi= $password;
+        $this->_passwordApi= $passwordApi;
         $credentials = array();
         $credentials["user"] = $this->_username;
         $credentials["apipassword"] = $this->_passwordApi;
+        $credentials["password"] = $this->_password;
         $this->_network->login($credentials);
         if ($this->_network->checkConnection()) {
             $this->_logged = true;
