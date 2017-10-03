@@ -281,7 +281,7 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
                 $Product->price = (string)$productItem->{'sale-price'}; //129.0
             if (property_exists($productItem, 'currency'))
                 $Product->currency = (string)$productItem->currency; //'EUR'
-            if (property_exists($productItem, 'buy-url') && property_exists($productItem->trackingLinks, 'trackingLink')) {
+            if (property_exists($productItem, 'buy-url')) {
                 $Product->ppv = (string)$productItem->{'buy-url'};
                 $Product->ppc = (string)$productItem->{'buy-url'};
                 $Product->adspaceId = (string)$productItem->{'ad-id'};
