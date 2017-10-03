@@ -201,23 +201,23 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
 
 
 
-
+        ;
 
 //
         $_params = array_merge([
             'website-id' => $this->_website_id,
             'advertiser-ids' => $params['programId'],
-            'keywords' => $params['searchType'],
+            'keywords' => isset($params['query']),
             'serviceable-area' => null,
             'isbn' => null,
             'upc' => null,
             'manufacturer-name' => null,
             'manufacturer-sku' => null,
             'advertiser-sku' => null,
-            'low-price' => $params['minPrice'],
-            'high-price' => $params['maxPrice'],
-            'low-sale-price' => $params['minPrice'],
-            'high-sale-price' => $params['maxPrice'],
+            'low-price' => isset($params['minPrice']),
+            'high-price' => isset($params['maxPrice']),
+            'low-sale-price' => isset($params['minPrice']),
+            'high-sale-price' => isset($params['maxPrice']),
             'currency' => null,
             'sort-by' => null,
             'sort-order' => null,
