@@ -78,7 +78,7 @@ class ZanoxEx extends ZanoxOara
                 $params['minPrice'],
                 $params['maxPrice'],
                 $params['adspaceId'],
-                $params['page'],
+                $params['page']-1,
                 $params['items']);
         } catch (\Exception $e) {
             $iteration++;

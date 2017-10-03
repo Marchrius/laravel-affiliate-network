@@ -286,7 +286,7 @@ class Zanox extends AbstractNetwork implements NetworkInterface
             'minPrice' => null,
             'maxPrice' => null,
             'adspaceId' => null,
-            'page' => 0,
+            'page' => 1,
             'items' => 10
         ], $params);
         $products =  $this->_network->getProducts($_params);
