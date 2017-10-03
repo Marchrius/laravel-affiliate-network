@@ -207,7 +207,7 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
         $_params = array_merge([
             'website-id' => $this->_website_id,
             'advertiser-ids' => $params['programId'],
-            'keywords' => $params['query'],
+            'keywords' => $params['searchType'],
             'serviceable-area' => null,
             'isbn' => null,
             'upc' => null,
