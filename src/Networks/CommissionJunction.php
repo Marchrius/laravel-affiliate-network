@@ -206,23 +206,23 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
 //
         $_params = array_merge([
             'website-id' => $this->_website_id,
-            'advertiser-ids' => null,
-            'keywords' => null,
+            'advertiser-ids' => $params['programId'],
+            'keywords' => $params['query'],
             'serviceable-area' => null,
             'isbn' => null,
             'upc' => null,
             'manufacturer-name' => null,
             'manufacturer-sku' => null,
             'advertiser-sku' => null,
-            'low-price' => null,
-            'high-price' => null,
-            'low-sale-price' => null,
-            'high-sale-price' => null,
+            'low-price' => $params['minPrice'],
+            'high-price' => $params['maxPrice'],
+            'low-sale-price' => $params['minPrice'],
+            'high-sale-price' => $params['maxPrice'],
             'currency' => null,
             'sort-by' => null,
             'sort-order' => null,
-            'page-number' => 1,
-            'records-per-page' => null,
+            'page-number' => $params['page'],
+            'records-per-page' => $params['items'],
         ], $params);
 
         $__url='https://product-search.api.cj.com/v2/product-search?'.http_build_query($_params);
