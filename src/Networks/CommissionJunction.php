@@ -248,7 +248,7 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
             'currency' => null,
             'sort-by' => null,
             'sort-order' => null,
-            'page-number' => $params['page']+1,
+            'page-number' => $params['page'],
             'records-per-page' => $params['items'],
         );
 
