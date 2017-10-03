@@ -201,29 +201,56 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
 
 
 
-        ;
 
 //
-        $_params = array_merge([
+//        $_params = array_merge([
+//            'website-id' => $this->_website_id,
+//            'advertiser-ids' => $params['programId'],
+//            'keywords' => isset($params['query']),
+//            'serviceable-area' => null,
+//            'isbn' => null,
+//            'upc' => null,
+//            'manufacturer-name' => null,
+//            'manufacturer-sku' => null,
+//            'advertiser-sku' => null,
+//            'low-price' => isset($params['minPrice'])? $params['minPrice'] : null,
+//            'high-price' => isset($params['maxPrice']),
+//            'low-sale-price' => isset($params['minPrice']),
+//            'high-sale-price' => isset($params['maxPrice']),
+//            'currency' => null,
+//            'sort-by' => null,
+//            'sort-order' => null,
+//            'page-number' => $params['page'],
+//            'records-per-page' => $params['items'],
+//        ], $params);
+//
+//        $suppKeys = ['website-id', 'advertiser-ids', 'keywords', 'serviceable-area', 'isbn', 'upc', 'manufacturer-name', 'manufacturer-sku', 'advertiser-sku', 'low-price', 'high-price', 'low-sale-price', 'high-sale-price', 'currency', 'sort-by', 'sort-order', 'page-number', 'records-per-page']
+//        foreach ($params as $key => $param) {
+//            if (!in_array($key, $suppKeys)) {
+//                unset($params[$key]);
+//            }
+//        }
+
+        $_params = array(
             'website-id' => $this->_website_id,
-            'advertiser-ids' => $params['programId'],
-            'keywords' => isset($params['query']),
+            'advertiser-ids' => implode(',',$params['programId']),
+            'keywords' => isset($params['query'])?$params['query']:null,
             'serviceable-area' => null,
             'isbn' => null,
             'upc' => null,
             'manufacturer-name' => null,
             'manufacturer-sku' => null,
             'advertiser-sku' => null,
-            'low-price' => isset($params['minPrice']),
-            'high-price' => isset($params['maxPrice']),
-            'low-sale-price' => isset($params['minPrice']),
-            'high-sale-price' => isset($params['maxPrice']),
+            'low-price' => isset($params['minPrice'])? $params['minPrice'] : null,
+            'high-price' => isset($params['maxPrice'])? $params['maxPrice']:null,
+            'low-sale-price' => isset($params['minPrice'])? $params['minPrice']:null,
+            'high-sale-price' => isset($params['maxPrice'])? $params['maxPrice']:null,
             'currency' => null,
             'sort-by' => null,
             'sort-order' => null,
-            'page-number' => $params['page'],
+            'page-number' => $params['page']+1,
             'records-per-page' => $params['items'],
-        ], $params);
+        );
 
         $__url='https://product-search.api.cj.com/v2/product-search?'.http_build_query($_params);
         $products = simplexml_load_string($this->_apiCall($__url));
