@@ -10,6 +10,7 @@ use Padosoft\AffiliateNetwork\AbstractNetwork;
 use Padosoft\AffiliateNetwork\NetworkInterface;
 use Padosoft\AffiliateNetwork\DealsResultset;
 use Padosoft\AffiliateNetwork\ProductsResultset;
+use Padosoft\AffiliateNetwork\Product;
 
 // require "../vendor/fubralimited/php-oara/Oara/Network/Publisher/CommissionJunction/Zapi/ApiClient.php";
 
@@ -197,6 +198,96 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
      */
     public function getProducts(array $params = []): ProductsResultset
     {
+
+
+
+
+
+//
+        $_params = array_merge([
+            'website-id' => $this->_website_id,
+            'advertiser-ids' => null,
+            'keywords' => null,
+            'serviceable-area' => null,
+            'isbn' => null,
+            'upc' => null,
+            'manufacturer-name' => null,
+            'manufacturer-sku' => null,
+            'advertiser-sku' => null,
+            'low-price' => null,
+            'high-price' => null,
+            'low-sale-price' => null,
+            'high-sale-price' => null,
+            'currency' => null,
+            'sort-by' => null,
+            'sort-order' => null,
+            'page-number' => 1,
+            'records-per-page' => null,
+        ], $params);
+
+        $__url='https://product-search.api.cj.com/v2/product-search?'.http_build_query($_params);
+        $products = simplexml_load_string($this->_apiCall($__url));
+//        $products =  $this->_network->getProducts($_params);
+        $set = ProductsResultset::createInstance();
+        if (count($products) == 0 || (!property_exists($products, 'products') || !property_exists($products->products, 'product')))
+        {
+            return ProductsResultset::createInstance();
+        }
+
+        $set->page = (string)$products->products->attributes()->{'page-number'};
+        $set->items = (string)$products->products->attributes()->{'records-returned'};
+        $set->total = (string)$products->products->attributes()->{'total-matched'};
+
+        foreach ($products->products->product as $productItem) {
+            $Product = Product::createInstance();
+            if (property_exists($productItem, 'name')) {
+                $Product->name = (string)$productItem->name;//'Danava',
+            }
+            if (property_exists($productItem, 'modified')) {
+                $Product->modified = (string)$productItem->modified; //'2016-11-24T11:52:03Z',
+            }
+            if (property_exists($productItem, 'advertiser-id')) {
+                $Product->merchant_ID = (string)$productItem->{'advertiser-id'}; //'Twelve Thirteen DE'
+                $Product->merchant_name = (string)$productItem->{'advertiser-name'}; //17434,
+            }
+            if (property_exists($productItem, 'sale-price'))
+                $Product->price = (string)$productItem->{'sale-price'}; //129.0
+            if (property_exists($productItem, 'currency'))
+                $Product->currency = (string)$productItem->currency; //'EUR'
+            if (property_exists($productItem, 'buy-url') && property_exists($productItem->trackingLinks, 'trackingLink')) {
+                $Product->ppv = (string)$productItem->{'buy-url'};
+                $Product->ppc = (string)$productItem->{'buy-url'};
+                $Product->adspaceId = (string)$productItem->{'ad-id'};
+            }
+            if (property_exists($productItem, 'description'))
+                $Product->description = (string)$productItem->description; //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',
+            if (property_exists($productItem, 'manufacturer-name'))
+                $Product->manufacturer = (string)$productItem->{'manufacturer-name'}; //'Twelve Thirteen Jewelry'
+            if (property_exists($productItem, 'ean'))
+                $Product->ean = (string)$productItem->ean; //'0796716271505'
+            if (property_exists($productItem, 'deliveryTime'))
+                $Product->deliveryTime = (string)$productItem->deliveryTime; //'1-3 Tage'
+            if (property_exists($productItem, 'price'))
+                $Product->priceOld = (string)$productItem->price; //0.0
+            if (property_exists($productItem, 'shippingCosts'))
+                $Product->shippingCosts = (string)$productItem->shippingCosts; //'0.0'
+            if (property_exists($productItem, 'shipping'))
+                $Product->shipping = (string)$productItem->shipping; // '0.0'
+            if (property_exists($productItem, 'advertiser-category'))
+                $Product->merchantCategory = (string)$productItem->{'advertiser-category'}; //'Damen / Damen Armbänder / Buddha Armbänder'
+            if (property_exists($productItem, 'merchantProductId'))
+                $Product->merchantProductId = (string)$productItem->merchantProductId; //'BR018.M'
+            if (property_exists($productItem, 'id'))
+                $Product->id = (string)$productItem->id; //'1ed7c3b4ab79cdbbf127cb78ec2aaff4'
+            if (property_exists($productItem, 'image-url')) {
+                $Product->image = (string)$productItem->{'image-url'};
+            }
+            $set->products[] = $Product;
+        }
+
+        return $set;
+
+
         // TODO: Implement getProducts() method.
         throw new \Exception("Not implemented yet");
     }
