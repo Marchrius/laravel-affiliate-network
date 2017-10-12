@@ -24,30 +24,53 @@ class Zanox extends AbstractNetwork implements NetworkInterface
     /**
      * @var object
      */
-    private $_network   = null;
+    private $_network = null;
     protected $_apiClient = null;
-    private $_username  = '';
-    private $_password  = '';
-    private $_logged    = false;
-    protected $_tracking_parameter    = 'zpar0';
+    private $_username = '';
+    private $_password = '';
+    private $_logged = false;
+    protected $_tracking_parameter = 'zpar0';
+
+    protected $ProductMapper = [
+        'name' => ['type' => 'string', 'prop' => 'name', 'default' => ''],
+        'modified' => ['type' => 'string', 'prop' => 'modified', 'default' => ''],
+        'merchant_ID' => ['type' => 'integer', 'prop' => 'program.id', 'default' => 0],
+        'merchant_name' => ['type' => 'string', 'prop' => 'program._', 'default' => ''],
+        'price' => ['type' => 'float', 'prop' => 'price', 'default' => 0.0],
+        'currency' => ['type' => 'string', 'prop' => 'currency', 'default' => ''],
+        'ppv' => ['type' => 'string', 'prop' => 'trackingLinks.trackingLink[0].ppv', 'default' => ''],
+        'ppc' => ['type' => 'string', 'prop' => 'trackingLinks.trackingLink[0].ppc', 'default' => ''],
+        'adspaceId' => ['type' => 'string', 'prop' => 'trackingLinks.trackingLink[0].adspaceId', 'default' => ''],
+        'description' => ['type' => 'string', 'prop' => 'description', 'default' => ''],
+        'manufacturer' => ['type' => 'string', 'prop' => 'manufacturer', 'default' => ''],
+        'ean' => ['type' => 'string', 'prop' => 'ean', 'default' => ''],
+        'deliveryTime' => ['type' => 'string', 'prop' => 'deliveryTime', 'default' => ''],
+        'priceOld' => ['type' => 'float', 'prop' => 'priceOld', 'default' => 0.0],
+        'shippingCosts' => ['type' => 'string', 'prop' => 'shippingCosts', 'default' => ''],
+        'shipping' => ['type' => 'string', 'prop' => 'shipping', 'default' => ''],
+        'merchantCategory' => ['type' => 'string', 'prop' => 'merchantCategory', 'default' => ''],
+        'merchantProductId' => ['type' => 'string', 'prop' => 'merchantProductId', 'default' => ''],
+        'id' => ['type' => 'string', 'prop' => 'id', 'default' => ''],
+        'image' => ['type' => 'string', 'prop' => 'image.large', 'default' => ''],
+    ];
 
 
     /**
      * @method __construct
      */
-    public function __construct(string $username, string $password,string $idSite='')
+    public function __construct(string $username, string $password, string $idSite = '')
     {
         $this->_network = new ZanoxEx;
         $this->_username = $username;
         $this->_password = $password;
-        $this->login( $this->_username, $this->_password );
+        $this->login($this->_username, $this->_password);
 
     }
 
-    public function login(string $username, string $password,string $idSite=''): bool
+    public function login(string $username, string $password, string $idSite = ''): bool
     {
         $this->_logged = false;
-        if (isNullOrEmpty( $username ) || isNullOrEmpty( $password )) {
+        if (isNullOrEmpty($username) || isNullOrEmpty($password)) {
 
             return false;
         }
@@ -56,7 +79,7 @@ class Zanox extends AbstractNetwork implements NetworkInterface
         $credentials = array();
         $credentials["connectid"] = $this->_username;
         $credentials["secretkey"] = $this->_password;
-        $this->_network->login( $credentials );
+        $this->_network->login($credentials);
         $this->_apiClient = $this->_network->getApiClient();
         if ($this->_network->checkConnection()) {
             $this->_logged = true;
@@ -76,6 +99,7 @@ class Zanox extends AbstractNetwork implements NetworkInterface
 
     /**
      * @return array of Merchants
+     * @throws \Exception
      */
     public function getMerchants(): array
     {
@@ -100,71 +124,72 @@ class Zanox extends AbstractNetwork implements NetworkInterface
      * @param int $items_per_page
      *
      * @return DealsResultset
+     * @throws \Exception
      */
-    public function getDeals($merchantID=NULL,int $page=0,int $items_per_page=10 ): DealsResultset
+    public function getDeals($merchantID = NULL, int $page = 0, int $items_per_page = 10): DealsResultset
     {
-        if (!isIntegerPositive($items_per_page)){
-            $items_per_page=10;
+        if (!isIntegerPositive($items_per_page)) {
+            $items_per_page = 10;
         }
-        $result=DealsResultset::createInstance();
+        $result = DealsResultset::createInstance();
         if (!$this->checkLogin()) {
             return $result;
         }
         /*$this->_apiClient->setConnectId( $this->_username );
         $this->_apiClient->setSecretKey( $this->_password );*/
-        $adSpaces=$this->_apiClient->getAdspaces(0,100);
-        if (!is_object($adSpaces)){
-            $adSpaces=json_encode($adSpaces);
+        $adSpaces = $this->_apiClient->getAdspaces(0, 100);
+        if (!is_object($adSpaces)) {
+            $adSpaces = json_encode($adSpaces);
         }
-        if ($adSpaces->items<1){
+        if ($adSpaces->items < 1) {
             return $result;
         }
 
-        $adSpaceId=$adSpaces->adspaceItems->adspaceItem[0]->id;
-        if (!isIntegerPositive($merchantID)){
-            $merchantID=NULL;
+        $adSpaceId = $adSpaces->adspaceItems->adspaceItem[0]->id;
+        if (!isIntegerPositive($merchantID)) {
+            $merchantID = NULL;
         }
 
-        $Response = $this->_apiClient->searchIncentives($merchantID,$adSpaceId,'coupons',NULL,$page,$items_per_page);
-        
-        if (!is_object($Response)){
-            $Response=json_decode($Response);
+        $Response = $this->_apiClient->searchIncentives($merchantID, $adSpaceId, 'coupons', NULL, $page, $items_per_page);
+
+        if (!is_object($Response)) {
+            $Response = json_decode($Response);
         }
-        $result->page=$Response->page;
-        $result->items=$Response->items;
-        $result->total=$Response->total;
-        ($Response->total>0)?$result->num_pages=(int)ceil($Response->total/$items_per_page):$result->num_pages=0;
+        $result->page = $Response->page;
+        $result->items = $Response->items;
+        $result->total = $Response->total;
+        ($Response->total > 0) ? $result->num_pages = (int)ceil($Response->total / $items_per_page) : $result->num_pages = 0;
         $arrAdmediumItems = $Response->incentiveItems->incentiveItem;
 
         foreach ($arrAdmediumItems as $admediumItems) {
             $Deal = Deal::createInstance();
             $Deal->id = (int)$admediumItems->id;
-            $Deal->created_at =$admediumItems->createDate;
+            $Deal->created_at = $admediumItems->createDate;
             $Deal->startDate = $admediumItems->startDate;
-            isset($admediumItems->endDate)?$Deal->endDate = $admediumItems->endDate:$Deal->endDate = '';
+            isset($admediumItems->endDate) ? $Deal->endDate = $admediumItems->endDate : $Deal->endDate = '';
             $Deal->name = $admediumItems->name;
             $Deal->code = $admediumItems->couponCode;
             $Deal->description = $admediumItems->info4customer;
-            $Deal->note = $admediumItems->info4publisher.' '.$admediumItems->restrictions;
+            $Deal->note = $admediumItems->info4publisher . ' ' . $admediumItems->restrictions;
             $Deal->is_percent = 0;
-            $Deal->value=0;
-            $Deal->currency='';
+            $Deal->value = 0;
+            $Deal->currency = '';
             //dd($admediumItems->percentage);
-            if (isset($admediumItems->percentage) && isIntegerPositive($admediumItems->percentage)){
+            if (isset($admediumItems->percentage) && isIntegerPositive($admediumItems->percentage)) {
                 $Deal->is_percent = 1;
-                $Deal->value=$admediumItems->percentage;
-            }elseif (isset($admediumItems->total)){
+                $Deal->value = $admediumItems->percentage;
+            } elseif (isset($admediumItems->total)) {
 
-                $Deal->value=$admediumItems->total;
-                $Deal->currency=$admediumItems->currency;
+                $Deal->value = $admediumItems->total;
+                $Deal->currency = $admediumItems->currency;
             }
             //$Deal->deal_type = $admediumItems['admediumType'];
             $Deal->merchant_ID = (int)$admediumItems->program->id;
-            
+
             $Deal->merchant_name = $admediumItems->program->_;
             $Deal->ppv = $admediumItems->admedia->admediumItem[0]->trackingLinks->trackingLink[0]->ppv;
             $Deal->ppc = $admediumItems->admedia->admediumItem[0]->trackingLinks->trackingLink[0]->ppc;
-            $result->deals[]=$Deal;
+            $result->deals[] = $Deal;
             /*if ($merchantID > 0) {
                 if ($merchantID == $admediumItems['program']['@id']) {
                     $arrResult[] = $Deal;
@@ -184,47 +209,48 @@ class Zanox extends AbstractNetwork implements NetworkInterface
      * @param int $merchantID
      *
      * @return array of Transaction
+     * @throws \Exception
      */
     public function getSales(\DateTime $dateFrom, \DateTime $dateTo, array $arrMerchantID = array()): array
     {
         if (!$this->checkLogin()) {
             return array();
         }
-        $dateFrom2=new \DateTime($dateFrom->format('Y-m-d'));
-        if ($dateTo->format('Y-m-d')==$dateFrom2->format('Y-m-d')){
+        $dateFrom2 = new \DateTime($dateFrom->format('Y-m-d'));
+        if ($dateTo->format('Y-m-d') == $dateFrom2->format('Y-m-d')) {
             $dateFrom2->sub(new \DateInterval('P1D'));
         }
 
         $arrResult = array();
-        if (count( $arrMerchantID ) < 1) {
+        if (count($arrMerchantID) < 1) {
             $merchants = $this->getMerchants();
             foreach ($merchants as $merchant) {
                 $arrMerchantID[$merchant->merchant_ID] = ['cid' => $merchant->merchant_ID, 'name' => $merchant->name];
             }
         }
-        $transcationList = $this->_network->getTransactionList( $arrMerchantID, $dateFrom2, $dateTo );
+        $transcationList = $this->_network->getTransactionList($arrMerchantID, $dateFrom2, $dateTo);
         foreach ($transcationList as $transaction) {
             $Transaction = Transaction::createInstance();
-            array_key_exists_safe( $transaction,
-                'currency' ) ? $Transaction->currency = $transaction['currency'] : $Transaction->currency = '';
-            array_key_exists_safe( $transaction,
-                'status' ) ? $Transaction->status = $transaction['status'] : $Transaction->status = '';
-            array_key_exists_safe( $transaction,
-                'amount' ) ? $Transaction->amount = $transaction['amount'] : $Transaction->amount = '';
-            array_key_exists_safe( $transaction,
-                'custom_id' ) ? $Transaction->custom_ID = $transaction['custom_id'] : $Transaction->custom_ID = '';
-            array_key_exists_safe( $transaction,
-                'title' ) ? $Transaction->title = $transaction['title'] : $Transaction->title = '';
-            array_key_exists_safe( $transaction,
-                'unique_id' ) ? $Transaction->unique_ID = $transaction['unique_id'] : $Transaction->unique_ID = '';
-            array_key_exists_safe( $transaction,
-                'commission' ) ? $Transaction->commission = $transaction['commission'] : $Transaction->commission = '';
-            $date = new \DateTime( $transaction['date'] );
+            array_key_exists_safe($transaction,
+                'currency') ? $Transaction->currency = $transaction['currency'] : $Transaction->currency = '';
+            array_key_exists_safe($transaction,
+                'status') ? $Transaction->status = $transaction['status'] : $Transaction->status = '';
+            array_key_exists_safe($transaction,
+                'amount') ? $Transaction->amount = $transaction['amount'] : $Transaction->amount = '';
+            array_key_exists_safe($transaction,
+                'custom_id') ? $Transaction->custom_ID = $transaction['custom_id'] : $Transaction->custom_ID = '';
+            array_key_exists_safe($transaction,
+                'title') ? $Transaction->title = $transaction['title'] : $Transaction->title = '';
+            array_key_exists_safe($transaction,
+                'unique_id') ? $Transaction->unique_ID = $transaction['unique_id'] : $Transaction->unique_ID = '';
+            array_key_exists_safe($transaction,
+                'commission') ? $Transaction->commission = $transaction['commission'] : $Transaction->commission = '';
+            $date = new \DateTime($transaction['date']);
             $Transaction->date = $date; // $date->format('Y-m-d H:i:s');
-            array_key_exists_safe( $transaction,
-                'merchantId' ) ? $Transaction->merchant_ID = $transaction['merchantId'] : $Transaction->merchant_ID = '';
-            array_key_exists_safe( $transaction,
-                'approved' ) ? $Transaction->approved = $transaction['approved'] : $Transaction->approved = '';
+            array_key_exists_safe($transaction,
+                'merchantId') ? $Transaction->merchant_ID = $transaction['merchantId'] : $Transaction->merchant_ID = '';
+            array_key_exists_safe($transaction,
+                'approved') ? $Transaction->approved = $transaction['approved'] : $Transaction->approved = '';
             $arrResult[] = $Transaction;
         }
 
@@ -257,7 +283,7 @@ class Zanox extends AbstractNetwork implements NetworkInterface
     }
 
     /**
-     * @param  array $params  this array can contains these keys
+     * @param  array $params this array can contains these keys
      *                        string      query          search string
      *                        string      searchType     search type (optional) (contextual or phrase)
      *                        string      region         limit search to region (optional)
@@ -290,7 +316,7 @@ class Zanox extends AbstractNetwork implements NetworkInterface
             'page' => 1,
             'items' => 10
         ], $params);
-        $products =  $this->_network->getProducts($_params);
+        $products = $this->_network->getProducts($_params);
         $set = ProductsResultset::createInstance();
         if (count($products) == 0 || (!property_exists($products, 'productItems') || !property_exists($products->productItems, 'productItem'))) {
             return ProductsResultset::createInstance();
@@ -301,49 +327,8 @@ class Zanox extends AbstractNetwork implements NetworkInterface
         $set->total = $products->total;
 
         foreach ($products->productItems->productItem as $productItem) {
-            $Product = Product::createInstance();
-            if (property_exists($productItem, 'name')) {
-                $Product->name = $productItem->name;//'Danava',
-            }
-            if (property_exists($productItem, 'modified')) {
-                $Product->modified = $productItem->modified; //'2016-11-24T11:52:03Z',
-            }
-            if (property_exists($productItem, 'program')) {
-                $Product->merchant_ID = $productItem->program->id; //'Twelve Thirteen DE'
-                $Product->merchant_name = $productItem->program->_; //17434,
-            }
-            if (property_exists($productItem, 'price'))
-                $Product->price = $productItem->price; //129.0
-            if (property_exists($productItem, 'currency'))
-                $Product->currency = $productItem->currency; //'EUR'
-            if (property_exists($productItem, 'trackingLinks') && property_exists($productItem->trackingLinks, 'trackingLink')) {
-                $Product->ppv = $productItem->trackingLinks->trackingLink[0]->ppv;
-                $Product->ppc = $productItem->trackingLinks->trackingLink[0]->ppc;
-                $Product->adspaceId = $productItem->trackingLinks->trackingLink[0]->adspaceId;
-            }
-            if (property_exists($productItem, 'description'))
-                $Product->description = $productItem->description; //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',
-            if (property_exists($productItem, 'manufacturer'))
-                $Product->manufacturer = $productItem->manufacturer; //'Twelve Thirteen Jewelry'
-            if (property_exists($productItem, 'ean'))
-                $Product->ean = $productItem->ean; //'0796716271505'
-            if (property_exists($productItem, 'deliveryTime'))
-                $Product->deliveryTime = $productItem->deliveryTime; //'1-3 Tage'
-            if (property_exists($productItem, 'priceOld'))
-                $Product->priceOld = $productItem->priceOld; //0.0
-            if (property_exists($productItem, 'shippingCosts'))
-                $Product->shippingCosts = $productItem->shippingCosts; //'0.0'
-            if (property_exists($productItem, 'shipping'))
-                $Product->shipping = $productItem->shipping; // '0.0'
-            if (property_exists($productItem, 'merchantCategory'))
-                $Product->merchantCategory = $productItem->merchantCategory; //'Damen / Damen Armbänder / Buddha Armbänder'
-            if (property_exists($productItem, 'merchantProductId'))
-                $Product->merchantProductId = $productItem->merchantProductId; //'BR018.M'
-            if (property_exists($productItem, 'id'))
-                $Product->id = $productItem->id; //'1ed7c3b4ab79cdbbf127cb78ec2aaff4'
-            if (property_exists($productItem, 'image') && property_exists($productItem->image, 'large')) {
-                $Product->image = $productItem->image->large;
-            }
+            $Product = new Product();
+            $this->mapProduct($Product, $productItem);
             $set->products[] = $Product;
         }
 
