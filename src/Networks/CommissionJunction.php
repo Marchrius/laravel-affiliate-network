@@ -34,30 +34,30 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
     /**
      * @method __construct
      */
-    public function __construct(string $username, string $password, string $passwordApi, string $idSite='')
+    public function __construct(string $username, string $password, string $passwordApi, string $idSite = '')
     {
         $this->_network = new \Oara\Network\Publisher\CommissionJunction;
         $this->_username = $username;
         $this->_password = $password;
         $this->_passwordApi = $passwordApi;
         $this->_website_id = $idSite;
-        $this->login( $this->_username, $this->_password, $this->_passwordApi, $this->_website_id);
+        $this->login($this->_username, $this->_password, $this->_passwordApi, $this->_website_id);
         // $this->_apiClient = \ApiClient::factory(PROTOCOL_JSON);
     }
 
     /**
      * @return bool
      */
-    public function login(string $username, string $password, string $passwordApi, string $idSite=''): bool
+    public function login(string $username, string $password, string $passwordApi, string $idSite = ''): bool
     {
         $this->_logged = false;
-        if (isNullOrEmpty( $username ) && isNullOrEmpty( $password )) {
+        if (isNullOrEmpty($username) && isNullOrEmpty($password)) {
 
             return false;
         }
         $this->_username = $username;
         $this->_password = $password;
-        $this->_passwordApi= $passwordApi;
+        $this->_passwordApi = $passwordApi;
         $credentials = array();
         $credentials["user"] = $this->_username;
         $credentials["apipassword"] = $this->_passwordApi;
@@ -73,7 +73,7 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
     /**
      * @return bool
      */
-    public function checkLogin() : bool
+    public function checkLogin(): bool
     {
         return $this->_logged;
     }
@@ -144,14 +144,14 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
     public function getSales(\DateTime $dateFrom, \DateTime $dateTo, array $arrMerchantID = array()): array
     {
         $arrResult = array();
-        if (count( $arrMerchantID ) < 1) {
+        if (count($arrMerchantID) < 1) {
             $merchants = $this->getMerchants();
             foreach ($merchants as $merchant) {
                 $arrMerchantID[$merchant->merchant_ID] = ['cid' => $merchant->merchant_ID, 'name' => $merchant->name];
             }
         }
-        $transcationList = $this->_network->getTransactionList($arrMerchantID, $dateFrom,$dateTo);
-        foreach($transcationList as $transaction) {
+        $transcationList = $this->_network->getTransactionList($arrMerchantID, $dateFrom, $dateTo);
+        foreach ($transcationList as $transaction) {
             $Transaction = Transaction::createInstance();
             $Transaction->status = $transaction['status'];
             $Transaction->amount = $transaction['amount'];
@@ -192,9 +192,22 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
     }
 
     /**
-     * @param  array $params
+     * @param  array $params this array can contains these keys
+     *                        string      query          search string
+     *                        string      searchType     search type (optional) (contextual or phrase)
+     *                        string      region         limit search to region (optional)
+     *                        string      currency       limit search to currency (optional)
+     *                        int         categoryId     limit search to categorys (optional)
+     *                        array       programId      limit search to program list of programs (optional)
+     *                        boolean     hasImages      products with images (optional)
+     *                        float       minPrice       minimum price (optional)
+     *                        float       maxPrice       maximum price (optional)
+     *                        int         adspaceId      adspace id (optional)
+     *                        int         page           page of result set (optional)
+     *                        int         items          items per page (optional)
      *
      * @return ProductsResultset
+     * @throws \Exception
      */
     public function getProducts(array $params = []): ProductsResultset
     {
@@ -233,31 +246,30 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
 
         $_params = array(
             'website-id' => $this->_website_id,
-            'advertiser-ids' => implode(',',$params['programId']),
-            'keywords' => isset($params['query'])?$params['query']:null,
+            'advertiser-ids' => implode(',', $params['programId']),
+            'keywords' => isset($params['query']) ? $params['query'] : null,
             'serviceable-area' => null,
             'isbn' => null,
             'upc' => null,
             'manufacturer-name' => null,
             'manufacturer-sku' => null,
             'advertiser-sku' => null,
-            'low-price' => isset($params['minPrice'])? $params['minPrice'] : null,
-            'high-price' => isset($params['maxPrice'])? $params['maxPrice']:null,
-            'low-sale-price' => isset($params['minPrice'])? $params['minPrice']:null,
-            'high-sale-price' => isset($params['maxPrice'])? $params['maxPrice']:null,
-            'currency' => 'EUR',
+            'low-price' => isset($params['minPrice']) ? $params['minPrice'] : null,
+            'high-price' => isset($params['maxPrice']) ? $params['maxPrice'] : null,
+            'low-sale-price' => isset($params['minPrice']) ? $params['minPrice'] : null,
+            'high-sale-price' => isset($params['maxPrice']) ? $params['maxPrice'] : null,
+            'currency' => isset($params['currency']) ? $params['currency'] : null,
             'sort-by' => null,
             'sort-order' => null,
             'page-number' => $params['page'],
             'records-per-page' => $params['items'],
         );
 
-        $__url='https://product-search.api.cj.com/v2/product-search?'.http_build_query($_params);
+        $__url = 'https://product-search.api.cj.com/v2/product-search?' . http_build_query($_params);
         $products = simplexml_load_string($this->_apiCall($__url));
 //        $products =  $this->_network->getProducts($_params);
         $set = ProductsResultset::createInstance();
-        if (count($products) == 0 || (!property_exists($products, 'products') || !property_exists($products->products, 'product')))
-        {
+        if (count($products) == 0 || (!property_exists($products, 'products') || !property_exists($products->products, 'product'))) {
             return ProductsResultset::createInstance();
         }
 
@@ -274,11 +286,11 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
                 $Product->modified = (string)$productItem->modified; //'2016-11-24T11:52:03Z',
             }
             if (property_exists($productItem, 'advertiser-id')) {
-                $Product->merchant_ID = (string)$productItem->{'advertiser-id'}; //'Twelve Thirteen DE'
-                $Product->merchant_name = (string)$productItem->{'advertiser-name'}; //17434,
+                $Product->merchant_ID = intval((string)$productItem->{'advertiser-id'}); //17434
+                $Product->merchant_name = (string)$productItem->{'advertiser-name'}; //'Twelve Thirteen DE',
             }
             if (property_exists($productItem, 'sale-price'))
-                $Product->price = (string)$productItem->{'sale-price'}; //129.0
+                $Product->price = floatval((string)$productItem->{'sale-price'}); //129.0
             if (property_exists($productItem, 'currency'))
                 $Product->currency = (string)$productItem->currency; //'EUR'
             if (property_exists($productItem, 'buy-url')) {
@@ -304,8 +316,8 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
                 $Product->merchantCategory = (string)$productItem->{'advertiser-category'}; //'Damen / Damen Armbänder / Buddha Armbänder'
             if (property_exists($productItem, 'merchantProductId'))
                 $Product->merchantProductId = (string)$productItem->merchantProductId; //'BR018.M'
-            if (property_exists($productItem, 'id'))
-                $Product->id = (string)$productItem->id; //'1ed7c3b4ab79cdbbf127cb78ec2aaff4'
+            if (property_exists($productItem, 'sku'))
+                $Product->id = (string)$productItem->{'sku'}; //'1ed7c3b4ab79cdbbf127cb78ec2aaff4'
             if (property_exists($productItem, 'image-url')) {
                 $Product->image = (string)$productItem->{'image-url'};
             }
@@ -313,11 +325,8 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
         }
 
         return $set;
-
-
-        // TODO: Implement getProducts() method.
-        throw new \Exception("Not implemented yet");
     }
+
 
     /**
      * Api call CommissionJunction

@@ -261,6 +261,7 @@ class Zanox extends AbstractNetwork implements NetworkInterface
      *                        string      query          search string
      *                        string      searchType     search type (optional) (contextual or phrase)
      *                        string      region         limit search to region (optional)
+     *                        string      currency       limit search to currency (optional)
      *                        int         categoryId     limit search to categorys (optional)
      *                        array       programId      limit search to program list of programs (optional)
      *                        boolean     hasImages      products with images (optional)
@@ -271,16 +272,16 @@ class Zanox extends AbstractNetwork implements NetworkInterface
      *                        int         items          items per page (optional)
      *
      * @return ProductsResultset
+     * @throws \Exception
      */
     public function getProducts(array $params = []): ProductsResultset
     {
         $_params = array_merge([
             'query' => null,
             'searchType' => null,
-            'query' => null,
-            'searchType' => null,
             'region' => null,
             'categoryId' => null,
+            'currency' => null,
             'programId' => null,
             'hasImages' => null,
             'minPrice' => null,
@@ -291,8 +292,7 @@ class Zanox extends AbstractNetwork implements NetworkInterface
         ], $params);
         $products =  $this->_network->getProducts($_params);
         $set = ProductsResultset::createInstance();
-        if (count($products) == 0 || (!property_exists($products, 'productItems') || !property_exists($products->productItems, 'productItem')))
-        {
+        if (count($products) == 0 || (!property_exists($products, 'productItems') || !property_exists($products->productItems, 'productItem'))) {
             return ProductsResultset::createInstance();
         }
 
@@ -350,7 +350,9 @@ class Zanox extends AbstractNetwork implements NetworkInterface
         return $set;
     }
 
-    public function getTrackingParameter(){
+    public function getTrackingParameter()
+    {
         return $this->_tracking_parameter;
     }
+
 }

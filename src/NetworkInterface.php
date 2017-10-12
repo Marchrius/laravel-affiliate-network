@@ -39,6 +39,7 @@ interface NetworkInterface
      *                        string      query          search string
      *                        string      searchType     search type (optional) (contextual or phrase)
      *                        string      region         limit search to region (optional)
+     *                        string      currency       limit search to currency (optional)
      *                        int         categoryId     limit search to categorys (optional)
      *                        array       programId      limit search to program list of programs (optional)
      *                        boolean     hasImages      products with images (optional)

@@ -12,13 +12,30 @@ namespace Padosoft\AffiliateNetwork;
 class ProductsResultset
 {
 
-    public $page=0;
-    public $items=0;
-    public $total=0;
-    public $products=[];
+    /**
+     * @var int
+     */
+    public $page = 0;
+
+    /**
+     * @var int
+     */
+    public $items = 0;
+
+    /**
+     * @var int
+     */
+    public $total = 0;
+
+    /**
+     * @var array
+     */
+    public $products = [];
+
     /**
      * @method createInstance
-     * @return obj istance
+     * @return static instance
+     * @throws \Exception
      */
     public static function createInstance()
     {

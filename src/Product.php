@@ -14,12 +14,12 @@ class Product
     /**
      * @var int
      */
-    public $merchant_ID=0;
+    public $merchant_ID = 0;
 
     /**
      * @var string
      */
-    public $merchant_name='';
+    public $merchant_name = '';
 
     /**
      * @var string
@@ -110,7 +110,8 @@ class Product
 
     /**
      * @method createInstance
-     * @return obj istance
+     * @return static instance
+     * @throws \Exception
      */
     public static function createInstance()
     {
