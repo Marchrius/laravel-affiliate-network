@@ -28,8 +28,16 @@ class Amazon extends AbstractNetwork implements NetworkInterface
     /**
      * @method __construct
      */
-    public function __construct(array $credentials)
+    public function __construct($user, $password, $secretKey, $amazonKey, $associateTag)
     {
+        $credentials = [
+            'user' => $user,
+            'password' => $password,
+            'secretKey' => $secretKey,
+            'amazonKey' => $amazonKey,
+            'associateTag' => $associateTag
+        ];
+
         $this->_network = new \Oara\Network\Publisher\Amazon;
         $this->_credentials = $credentials;
 
@@ -43,15 +51,14 @@ class Amazon extends AbstractNetwork implements NetworkInterface
     public function login(array $credentials): bool
     {
         $this->_logged = false;
-        if (isNullOrEmpty( $credentials )) {
+        if (!is_array($credentials) && empty( $credentials )) {
 
             return false;
         }
-        $credentials = array();
+        //$credentials = array();
         $this->_network->login($credentials);
-        if ($this->_network->checkConnection()) {
-            $this->_logged = true;
-        }
+        $this->_logged = true;
+
 
         return $this->_logged;
     }
@@ -228,11 +235,10 @@ class Amazon extends AbstractNetwork implements NetworkInterface
             'merchantID' => 'Amazon',
             'page-number' => $params['page'],
             'records-per-page' => $params['items'],
-            'AWSAccessKeyId' => 'AKIAJH427NGVRUASEBZA',
-            'AssociateTag' => 'lookhave-21',
             'BrowseNode' => isset($params['[programId'])?$params['programId']:null,
 
         );
+        $_params["Timestamp"] = gmdate('Y-m-d\TH:i:s\Z');
 
         $products = simplexml_load_string($this->_apiCall($_params));
 //        $products =  $this->_network->getProducts($_params);
@@ -307,16 +313,16 @@ class Amazon extends AbstractNetwork implements NetworkInterface
     {
 
         $secret_key = $this->_network->_credentials['secretKey'];
-        $_baseUrl = 'http://webservices.amazon.it/onca/xml?AWSAccessKeyId='.$this->_network->_credentials['apiKey'].'&AssociateTag=lookhave-21&SearchIndex=Apparel&ResponseGroup=Images,ItemAttributes,Offers';
+        $_baseUrl = 'http://webservices.amazon.it/onca/xml?AWSAccessKeyId='.$this->_network->_credentials['amazonKey'].'&AssociateTag='.$this->_network->_credentials['associateTag'].'&SearchIndex=Apparel&ResponseGroup=Images,ItemAttributes,Offers';
         $string_to_sign = $_baseUrl.http_build_query($params);
         $signature = base64_encode(hash_hmac("sha256", $string_to_sign, $secret_key, true));
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $_baseUrl.http_build_query($params).'&'.$signature);
+        curl_setopt($ch, CURLOPT_URL, $_baseUrl.http_build_query($params).'&Signature='.$signature);
         curl_setopt($ch, CURLOPT_POST, FALSE);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: " . $this->_passwordApi));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: " . $this->_network->_credentials['secretKey']));
         $curl_results = curl_exec($ch);
         curl_close($ch);
         return $curl_results;
