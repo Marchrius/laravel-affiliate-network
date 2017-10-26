@@ -306,8 +306,8 @@ class Amazon extends AbstractNetwork implements NetworkInterface
     private function _apiCall($params)
     {
 
-        $secret_key = 'eEi+jQbTFxnPgq2MTskcdKboaJc11HslOGWxwxsx';
-        $_baseUrl = 'http://webservices.amazon.it/onca/xml?AWSAccessKeyId=AKIAJH427NGVRUASEBZA&AssociateTag=lookhave-21&SearchIndex=Apparel&ResponseGroup=Images,ItemAttributes,Offers';
+        $secret_key = $this->_network->_credentials['secretKey'];
+        $_baseUrl = 'http://webservices.amazon.it/onca/xml?AWSAccessKeyId='.$this->_network->_credentials['apiKey'].'&AssociateTag=lookhave-21&SearchIndex=Apparel&ResponseGroup=Images,ItemAttributes,Offers';
         $string_to_sign = $_baseUrl.http_build_query($params);
         $signature = base64_encode(hash_hmac("sha256", $string_to_sign, $secret_key, true));
         $ch = curl_init();
