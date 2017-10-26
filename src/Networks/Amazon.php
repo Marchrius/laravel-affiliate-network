@@ -190,72 +190,45 @@ class Amazon extends AbstractNetwork implements NetworkInterface
      *
      * @return ProductsResultset
      */
+
     public function getProducts(array $params = []): ProductsResultset
     {
 
-
-
-
-//
-//        $_params = array_merge([
-//            'website-id' => $this->_website_id,
-//            'advertiser-ids' => $params['programId'],
-//            'keywords' => isset($params['query']),
-//            'serviceable-area' => null,
-//            'isbn' => null,
-//            'upc' => null,
-//            'manufacturer-name' => null,
-//            'manufacturer-sku' => null,
-//            'advertiser-sku' => null,
-//            'low-price' => isset($params['minPrice'])? $params['minPrice'] : null,
-//            'high-price' => isset($params['maxPrice']),
-//            'low-sale-price' => isset($params['minPrice']),
-//            'high-sale-price' => isset($params['maxPrice']),
-//            'currency' => null,
-//            'sort-by' => null,
-//            'sort-order' => null,
-//            'page-number' => $params['page'],
-//            'records-per-page' => $params['items'],
-//        ], $params);
-//
-//        $suppKeys = ['website-id', 'advertiser-ids', 'keywords', 'serviceable-area', 'isbn', 'upc', 'manufacturer-name', 'manufacturer-sku', 'advertiser-sku', 'low-price', 'high-price', 'low-sale-price', 'high-sale-price', 'currency', 'sort-by', 'sort-order', 'page-number', 'records-per-page']
-//        foreach ($params as $key => $param) {
-//            if (!in_array($key, $suppKeys)) {
-//                unset($params[$key]);
-//            }
-//        }
-
         $_params = array(
-            'keywords' => isset($params['query'])?$params['query']:null,
-            'low-price' => isset($params['minPrice'])? $params['minPrice'] : null,
-            'high-price' => isset($params['maxPrice'])? $params['maxPrice']:null,
-            'low-sale-price' => isset($params['minPrice'])? $params['minPrice']:null,
-            'high-sale-price' => isset($params['maxPrice'])? $params['maxPrice']:null,
+            'Keywords' => isset($params['query'])?$params['query']:null,
+            'MinimumPrice' => isset($params['minPrice'])? $params['minPrice'] : null,
+            'MaximumPrice' => isset($params['maxPrice'])? $params['maxPrice']:null,
             'currency' => 'EUR',
             'merchantID' => 'Amazon',
-            'page-number' => $params['page'],
-            'records-per-page' => $params['items'],
-            'BrowseNode' => isset($params['[programId'])?$params['programId']:null,
+            'BrowseNode' =>isset($params['programId'])?$params['programId']:null,
+            'ItemPage' => $params['page']?$params['page']:1,
+            'AWSAccessKeyId' => $secret_key = $this->_network->_credentials['amazonKey'],
+            'AssociateTag' => $secret_key = $this->_network->_credentials['associateTag'],
+            'Operation'=>'ItemSearch',
+            'ResponseGroup' => 'Images,ItemAttributes,Offers, Variations',
+            'SearchIndex' => 'Apparel',
+            'Timestamp' => isset($params['Timestamp'])?$params['Timestamp'] : gmdate('Y-m-d\TH:i:s\Z')
 
         );
-        $_params["Timestamp"] = gmdate('Y-m-d\TH:i:s\Z');
 
         $products = simplexml_load_string($this->_apiCall($_params));
 //        $products =  $this->_network->getProducts($_params);
         $set = ProductsResultset::createInstance();
-        if (count($products) == 0 || (!property_exists($products, 'products') || !property_exists($products->products, 'product')))
+        if (count($products) == 0 || (!property_exists($products, 'Items')) || !property_exists($products->Items, 'Item') )
         {
             return ProductsResultset::createInstance();
         }
 
-        $set->page = (string)$products->products->attributes()->{'page-number'};
-        $set->items = (string)$products->products->attributes()->{'records-returned'};
-        $set->total = (string)$products->products->attributes()->{'total-matched'};
+        $set->page = (string)$products->Items->Request->ItemSearchRequest->ItemPage[0];
+        $set->total = (string)$products->Items->TotalResults[0];
+        $set->items = 10;
 
-        foreach ($products->products->product as $productItem) {
+        foreach ($products->Items->Item as $productItem) {
+
             $Product = Product::createInstance();
-            if (property_exists($productItem, 'name')) {
-                $Product->name = (string)$productItem->name;//'Danava',
+
+            if (property_exists($productItem->ItemAttributes, 'Title')) {
+                $Product->name = (string)$productItem->ItemAttributes->Title;//'Danava',
             }
             if (property_exists($productItem, 'modified')) {
                 $Product->modified = (string)$productItem->modified; //'2016-11-24T11:52:03Z',
@@ -264,37 +237,39 @@ class Amazon extends AbstractNetwork implements NetworkInterface
                 $Product->merchant_ID = (string)$productItem->{'advertiser-id'}; //'Twelve Thirteen DE'
                 $Product->merchant_name = (string)$productItem->{'advertiser-name'}; //17434,
             }
-            if (property_exists($productItem, 'sale-price'))
-                $Product->price = (string)$productItem->{'sale-price'}; //129.0
-            if (property_exists($productItem, 'currency'))
-                $Product->currency = (string)$productItem->currency; //'EUR'
-            if (property_exists($productItem, 'buy-url')) {
-                $Product->ppv = (string)$productItem->{'buy-url'};
-                $Product->ppc = (string)$productItem->{'buy-url'};
+            if (property_exists($productItem, 'DetailPageURL')) {
+                $Product->ppv = (string)$productItem->{'DetailPageURL'};
+                $Product->ppc = (string)$productItem->{'DetailPageURL'};
                 $Product->adspaceId = (string)$productItem->{'ad-id'};
             }
-            if (property_exists($productItem, 'description'))
-                $Product->description = (string)$productItem->description; //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',
-            if (property_exists($productItem, 'manufacturer-name'))
-                $Product->manufacturer = (string)$productItem->{'manufacturer-name'}; //'Twelve Thirteen Jewelry'
-            if (property_exists($productItem, 'ean'))
-                $Product->ean = (string)$productItem->ean; //'0796716271505'
+            $productItem = $productItem->Variations[0]->Item[0];
+            if (property_exists($productItem->ItemAttributes, 'ListPrice'))
+                $Product->price = (string)($productItem->ItemAttributes->ListPrice->Amount)/100; //129.0
+            if (property_exists($productItem->ItemAttributes->ListPrice, 'CurrencyCode'))
+                $Product->currency = (string)$productItem->ItemAttributes->ListPrice->CurrencyCode; //'EUR'
+
+            if (property_exists($productItem->ItemAttributes, 'Feature'))
+                $Product->description = implode ( '. ', json_decode(json_encode((array)$productItem->ItemAttributes->Feature), TRUE)); //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',
+            if (property_exists($productItem->ItemAttributes, 'Brand'))
+                $Product->manufacturer = (string)$productItem->ItemAttributes->Brand; //'Twelve Thirteen Jewelry'
+            if (property_exists($productItem->ItemAttributes, 'EAN'))
+                $Product->ean = (string)$productItem->ItemAttributes->EAN; //'0796716271505'
             if (property_exists($productItem, 'deliveryTime'))
                 $Product->deliveryTime = (string)$productItem->deliveryTime; //'1-3 Tage'
-            if (property_exists($productItem, 'price'))
-                $Product->priceOld = (string)$productItem->price; //0.0
+            if (property_exists($productItem->ItemAttributes, 'price'))
+                $Product->priceOld = (string)$productItem->ListPrice->Amount; //0.0
             if (property_exists($productItem, 'shippingCosts'))
                 $Product->shippingCosts = (string)$productItem->shippingCosts; //'0.0'
             if (property_exists($productItem, 'shipping'))
                 $Product->shipping = (string)$productItem->shipping; // '0.0'
-            if (property_exists($productItem, 'advertiser-category'))
-                $Product->merchantCategory = (string)$productItem->{'advertiser-category'}; //'Damen / Damen Armbänder / Buddha Armbänder'
+            if (property_exists($productItem->ItemAttributes, 'ProductTypeName'))
+                $Product->merchantCategory = (string)$productItem->ItemAttributes->ProductTypeName; //'Damen / Damen Armbänder / Buddha Armbänder'
             if (property_exists($productItem, 'merchantProductId'))
                 $Product->merchantProductId = (string)$productItem->merchantProductId; //'BR018.M'
             if (property_exists($productItem, 'id'))
                 $Product->id = (string)$productItem->id; //'1ed7c3b4ab79cdbbf127cb78ec2aaff4'
-            if (property_exists($productItem, 'image-url')) {
-                $Product->image = (string)$productItem->{'image-url'};
+            if (property_exists($productItem, 'LargeImage')) {
+                $Product->image = (string)$productItem->LargeImage->URL;
             }
             $set->products[] = $Product;
         }
@@ -313,23 +288,43 @@ class Amazon extends AbstractNetwork implements NetworkInterface
     {
 
         $secret_key = $this->_network->_credentials['secretKey'];
-        $_baseUrl = 'http://webservices.amazon.it/onca/xml?AWSAccessKeyId='.$this->_network->_credentials['amazonKey'].'&AssociateTag='.$this->_network->_credentials['associateTag'].'&SearchIndex=Apparel&ResponseGroup=Images,ItemAttributes,Offers';
-        $string_to_sign = $_baseUrl.http_build_query($params);
+
+
+        // The region you are interested in
+        $endpoint = "webservices.amazon.it";
+
+        $uri = "/onca/xml";
+
+        ksort($params);
+
+        $pairs = array();
+
+        foreach ($params as $key => $value) {
+            array_push($pairs, rawurlencode($key)."=".rawurlencode($value));
+        }
+
+        // Generate the canonical query
+        $canonical_query_string = join("&", $pairs);
+
+        // Generate the string to be signed
+        $string_to_sign = "GET\n".$endpoint."\n".$uri."\n".$canonical_query_string;
+
+        // Generate the signature required by the Product Advertising API
         $signature = base64_encode(hash_hmac("sha256", $string_to_sign, $secret_key, true));
+
+        // Generate the signed URL
+        $request_url = 'http://'.$endpoint.$uri.'?'.$canonical_query_string.'&Signature='.rawurlencode($signature);
+
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $_baseUrl.http_build_query($params).'&Signature='.$signature);
+        curl_setopt($ch, CURLOPT_URL, $request_url);
         curl_setopt($ch, CURLOPT_POST, FALSE);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: " . $this->_network->_credentials['secretKey']));
+//        curl_setopt($ch, CURLOPT_HTTPHEADER, array("Authorization: " . $this->_passwordApi));
         $curl_results = curl_exec($ch);
         curl_close($ch);
         return $curl_results;
     }
 
-    public function getTrackingParameter()
-    {
-        return $this->_tracking_parameter;
-    }
 }
