@@ -230,6 +230,7 @@ class Amazon extends AbstractNetwork implements NetworkInterface
             'records-per-page' => $params['items'],
             'AWSAccessKeyId' => 'AKIAJH427NGVRUASEBZA',
             'AssociateTag' => 'lookhave-21',
+            'BrowseNode' => isset($params['[programId'])?$params['programId']:null,
 
         );
 
