@@ -200,8 +200,7 @@ class Amazon extends AbstractNetwork implements NetworkInterface
             'MaximumPrice' => isset($params['maxPrice'])? $params['maxPrice']:null,
             'currency' => 'EUR',
             'merchantID' => 'Amazon',
-            'BrowseNode' =>isset($params['programId'])?$params['programId']:null,
-            'ItemPage' => $params['page']?$params['page']:1,
+            'BrowseNode' =>isset($params['BrowseNode'])?implode(',', $params['BrowseNode']):null,
             'AWSAccessKeyId' => $secret_key = $this->_network->_credentials['amazonKey'],
             'AssociateTag' => $secret_key = $this->_network->_credentials['associateTag'],
             'Operation'=>'ItemSearch',
@@ -242,11 +241,25 @@ class Amazon extends AbstractNetwork implements NetworkInterface
                 $Product->ppc = (string)$productItem->{'DetailPageURL'};
                 $Product->adspaceId = (string)$productItem->{'ad-id'};
             }
-            $productItem = $productItem->Variations[0]->Item[0];
-            if (property_exists($productItem->ItemAttributes, 'ListPrice'))
-                $Product->price = (string)($productItem->ItemAttributes->ListPrice->Amount)/100; //129.0
-            if (property_exists($productItem->ItemAttributes->ListPrice, 'CurrencyCode'))
-                $Product->currency = (string)$productItem->ItemAttributes->ListPrice->CurrencyCode; //'EUR'
+            if (property_exists($productItem, 'Variations')){
+                $productItem = $productItem->Variations[0]->Item[0];
+//                if (property_exists($productItem->ItemAttributes, 'ListPrice'))
+//                    $Product->price = (string)($productItem->ItemAttributes->ListPrice->Amount)/100; //129.0
+//                if (property_exists($productItem->ItemAttributes->ListPrice, 'CurrencyCode'))
+//                    $Product->currency = (string)$productItem->ItemAttributes->ListPrice->CurrencyCode; //'EUR'
+
+
+            }
+//            else{
+//                if (property_exists($productItem, 'OfferSummary'))
+//                    $Product->price = (string)($productItem->OfferSummary->LowestPrice->Amount)/100; //129.0
+//                if (property_exists($productItem->ItemAttributes->ListPrice, 'CurrencyCode'))
+//                    $Product->currency = (string)$productItem->OfferSummary->LowestPrice->CurrencyCode; //'EUR'
+//
+//            }
+            if (property_exists($productItem->ItemAttributes, 'Feature'))
+                $Product->description = implode ( '. ', json_decode(json_encode((array)$productItem->ItemAttributes->Feature), TRUE)); //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',
+
 
             if (property_exists($productItem->ItemAttributes, 'Feature'))
                 $Product->description = implode ( '. ', json_decode(json_encode((array)$productItem->ItemAttributes->Feature), TRUE)); //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',
