@@ -28,7 +28,7 @@ class Amazon extends AbstractNetwork implements NetworkInterface
     /**
      * @method __construct
      */
-    public function __construct(string $credentials)
+    public function __construct(array $credentials)
     {
         $this->_network = new \Oara\Network\Publisher\Amazon;
         $this->_credentials = $credentials;
@@ -40,7 +40,7 @@ class Amazon extends AbstractNetwork implements NetworkInterface
     /**
      * @return bool
      */
-    public function login(string $credentials): bool
+    public function login(array $credentials): bool
     {
         $this->_logged = false;
         if (isNullOrEmpty( $credentials )) {
