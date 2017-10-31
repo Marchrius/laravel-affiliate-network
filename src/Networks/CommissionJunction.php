@@ -258,7 +258,7 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
             'high-price' => isset($params['maxPrice']) ? $params['maxPrice'] : null,
             'low-sale-price' => isset($params['minPrice']) ? $params['minPrice'] : null,
             'high-sale-price' => isset($params['maxPrice']) ? $params['maxPrice'] : null,
-            'currency' => isset($params['currency']) ? $params['currency'] : null,
+            'currency' => 'EUR',
             'sort-by' => null,
             'sort-order' => null,
             'page-number' => $params['page'],
