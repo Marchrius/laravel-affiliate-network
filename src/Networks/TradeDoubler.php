@@ -200,7 +200,7 @@ class TradeDoubler extends AbstractNetwork implements NetworkInterface
     {
 
         $arrResult = array();
-        $jsonProducts = file_get_contents("http://api.tradedoubler.com/1.0/productsUnlimited.json|empty;pageSize=".$params["item"].";page=".$params["page"].";fid=".$params["id"]."?token=".$_ENV['TRADEDOUBLER_TOKEN']);
+        $jsonProducts = file_get_contents("http://api.tradedoubler.com/1.0/productsUnlimited.json|empty;pageSize=".$params["items"].";page=".$params["page"].";fid=".$params["id"]."?token=".$_ENV['TRADEDOUBLER_TOKEN']);
         $products = json_decode($jsonProducts, true);
 
         $set = ProductsResultset::createInstance();
