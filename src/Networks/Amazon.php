@@ -200,7 +200,12 @@ class Amazon extends AbstractNetwork implements NetworkInterface
             'MaximumPrice' => isset($params['maxPrice'])? $params['maxPrice']:null,
             'currency' => 'EUR',
             'merchantID' => 'Amazon',
+<<<<<<< HEAD
             'BrowseNode' =>isset($params['BrowseNode'])?implode(',', $params['BrowseNode']):null,
+=======
+            'BrowseNode' =>isset($params['programId'])?$params['programId']:null,
+            'ItemPage' => $params['page']?$params['page']:1,
+>>>>>>> amazon
             'AWSAccessKeyId' => $secret_key = $this->_network->_credentials['amazonKey'],
             'AssociateTag' => $secret_key = $this->_network->_credentials['associateTag'],
             'Operation'=>'ItemSearch',
@@ -241,6 +246,7 @@ class Amazon extends AbstractNetwork implements NetworkInterface
                 $Product->ppc = (string)$productItem->{'DetailPageURL'};
                 $Product->adspaceId = (string)$productItem->{'ad-id'};
             }
+<<<<<<< HEAD
             if (property_exists($productItem, 'Variations')){
                 $productItem = $productItem->Variations[0]->Item[0];
 //                if (property_exists($productItem->ItemAttributes, 'ListPrice'))
@@ -260,6 +266,13 @@ class Amazon extends AbstractNetwork implements NetworkInterface
             if (property_exists($productItem->ItemAttributes, 'Feature'))
                 $Product->description = implode ( '. ', json_decode(json_encode((array)$productItem->ItemAttributes->Feature), TRUE)); //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',
 
+=======
+            $productItem = $productItem->Variations[0]->Item[0];
+            if (property_exists($productItem->ItemAttributes, 'ListPrice'))
+                $Product->price = (string)($productItem->ItemAttributes->ListPrice->Amount)/100; //129.0
+            if (property_exists($productItem->ItemAttributes->ListPrice, 'CurrencyCode'))
+                $Product->currency = (string)$productItem->ItemAttributes->ListPrice->CurrencyCode; //'EUR'
+>>>>>>> amazon
 
             if (property_exists($productItem->ItemAttributes, 'Feature'))
                 $Product->description = implode ( '. ', json_decode(json_encode((array)$productItem->ItemAttributes->Feature), TRUE)); //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',

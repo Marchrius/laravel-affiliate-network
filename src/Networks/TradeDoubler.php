@@ -2,6 +2,7 @@
 
 namespace Padosoft\AffiliateNetwork\Networks;
 
+use Padosoft\AffiliateNetwork\Product;
 use Padosoft\AffiliateNetwork\Transaction;
 use Padosoft\AffiliateNetwork\DealsResultset;
 use Padosoft\AffiliateNetwork\Merchant;
@@ -12,9 +13,9 @@ use Padosoft\AffiliateNetwork\NetworkInterface;
 use Padosoft\AffiliateNetwork\TradeDoublerEx;
 use Padosoft\AffiliateNetwork\ProductsResultset;
 
-if (!defined('COOKIES_BASE_DIR')){
-    define('COOKIES_BASE_DIR',public_path('upload/report'));
-}
+//if (!defined('COOKIES_BASE_DIR')){
+//    define('COOKIES_BASE_DIR',public_path('upload/report'));
+//}
 /**
  * Class TradeDoubler
  * @package Padosoft\AffiliateNetwork\Networks
@@ -197,8 +198,66 @@ class TradeDoubler extends AbstractNetwork implements NetworkInterface
      */
     public function getProducts(array $params = []): ProductsResultset
     {
-        // TODO: Implement getProducts() method.
-        throw new \Exception("Not implemented yet");
+
+        $arrResult = array();
+        $jsonProducts = file_get_contents("http://api.tradedoubler.com/1.0/productsUnlimited.json|empty;pageSize=".$params["item"].";page=".$params["page"].";fid=".$params["id"]."?token=".$_ENV['TRADEDOUBLER_TOKEN']);
+        $products = json_decode($jsonProducts, true);
+
+        $set = ProductsResultset::createInstance();
+        if (count($products["products"]) == 0) {
+            return ProductsResultset::createInstance();
+        }
+        foreach ($products["products"] as $productItem) {
+            $Product = Product::createInstance();
+            if (count($productItem["name"])>0) {
+                $Product->name = (string)$productItem["name"];//'Danava',
+            }
+            if (count($productItem["offers"][0]["modified"])>0){
+                $Product->modified = (string)$productItem["offers"][0]["modified"]; //'2016-11-24T11:52:03Z',
+            }
+            if (count($productItem["offers"][0]["feedId"])>0) {
+                $Product->merchant_ID = intval((string)["offers"][0]["feedId"]); //17434
+                $Product->merchant_name = (string)["offers"][0]["programName"]; //'Twelve Thirteen DE',
+            }
+            if (count($productItem["offers"][0]["priceHistory"][0])>0){
+                if($productItem["offers"][0]["priceHistory"][0]["price"]["currency"]=="EUR"){
+                    $Product->currency = (string)$productItem["offers"][0]["priceHistory"][0]["price"]["currency"];
+                    $Product->price = floatval($productItem["offers"][0]["priceHistory"][0]["price"]["value"]);
+                    }
+            }
+            if (count($productItem["offers"][0]["productUrl"])>0) {
+                $Product->ppv = (string)$productItem["offers"][0]["productUrl"];
+                $Product->ppc = (string)$productItem["offers"][0]["productUrl"];
+                $Product->adspaceId = (string)$productItem["offers"][0]["id"];
+            }
+            if (count($productItem["description"])>0)
+                $Product->description = (string)$productItem["description"]; //'Rosegold trifft auf puristisches Schwarz ? aufwendige und traditionelle Makramee Technik trifft auf Eleganz. Das neue Danava Buddha Armband besteht aus schwarzem Onyx, dieser Edelstein wird sehr gerne als Schmuckstein verwendet und viel lieber getragen. Der feingearbeitete rosegoldene Buddha verleiht diesem Armband einen fernöstlichen Stil. Es lässt sich wunderbar zu allen Anlässen Tragen und zu vielen Outfits kombinieren, da es Eleganz ausstrahlt. Das Symbol des Buddhas ist besonders in dieser Saison sehr gefragt.',
+            if (count($productItem["brand"])>0)
+                $Product->manufacturer = (string)$productItem["brand"]; //'Twelve Thirteen Jewelry'
+            if (count($productItem["identifiers"]["ean"])>0)
+                $Product->ean = (string)$productItem["identifiers"]["ean"]; //'0796716271505'
+//            if (property_exists($productItem, 'deliveryTime'))
+//                $Product->deliveryTime = (string)$productItem->deliveryTime; //'1-3 Tage'
+//            if (property_exists($productItem, 'price'))
+//                $Product->priceOld = (string)$productItem->price; //0.0
+            if (count($productItem["offers"][0]["shippingCost"])>0)
+                $Product->shippingCosts = (string)$productItem["offers"][0]["shippingCost"]; //'0.0'
+//            if (property_exists($productItem, 'shipping'))
+//                $Product->shipping = (string)$productItem->shipping; // '0.0'
+            if (property_exists($productItem, 'advertiser-category'))
+                $Product->merchantCategory = (string)$productItem->{'advertiser-category'}; //'Damen / Damen Armbänder / Buddha Armbänder'
+            if (count($productItem["offers"][0]["sourceProductId"])>0)
+                $Product->merchantProductId = (string)$productItem["offers"][0]["sourceProductId"]; //'BR018.M'
+            if (count($productItem["identifiers"]["sku"])>0)
+                $Product->id = (string)$productItem["identifiers"]["sku"]; //'1ed7c3b4ab79cdbbf127cb78ec2aaff4'
+            if (count($productItem["productImage"])>0) {
+                $Product->image = (string)$productItem["productImage"]["url"];
+            }
+            $set->products[] = $Product;
+        }
+
+        return $set;
+
     }
 
     public function getTrackingParameter(){

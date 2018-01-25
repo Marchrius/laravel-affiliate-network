@@ -30,6 +30,9 @@ return array(
             ''
         )
     ),
+    'amazon' => array(
+
+    )
 
 
 );
