@@ -31,6 +31,29 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
     private $_website_id = '';
     protected $_tracking_parameter = 'sid';
 
+    protected $ProductMapper = [
+        'name' => ['type' => 'string', 'prop' => 'name', 'default' => ''],
+        'modified' => ['type' => 'string', 'prop' => 'modified', 'default' => ''],
+        'merchant_ID' => ['type' => 'integer', 'prop' => 'advertiser-id', 'default' => 0],
+        'merchant_name' => ['type' => 'string', 'prop' => 'advertiser-name', 'default' => ''],
+        'price' => ['type' => 'float', 'prop' => 'sale-price', 'default' => 0.0],
+        'currency' => ['type' => 'string', 'prop' => 'currency', 'default' => ''],
+        'ppv' => ['type' => 'string', 'prop' => 'buy-url', 'default' => ''],
+        'ppc' => ['type' => 'string', 'prop' => 'buy-url', 'default' => ''],
+        'adspaceId' => ['type' => 'string', 'prop' => 'ad-id', 'default' => ''],
+        'description' => ['type' => 'string', 'prop' => 'description', 'default' => ''],
+        'manufacturer' => ['type' => 'string', 'prop' => 'manufacturer-name', 'default' => ''],
+        'ean' => ['type' => 'string', 'prop' => 'ean', 'default' => ''],
+        'deliveryTime' => ['type' => 'string', 'prop' => 'deliveryTime', 'default' => ''],
+        'priceOld' => ['type' => 'float', 'prop' => 'price', 'default' => 0.0],
+        'shippingCosts' => ['type' => 'string', 'prop' => 'shippingCosts', 'default' => ''],
+        'shipping' => ['type' => 'string', 'prop' => 'shipping', 'default' => ''],
+        'merchantCategory' => ['type' => 'string', 'prop' => 'advertiser-category', 'default' => ''],
+        'merchantProductId' => ['type' => 'string', 'prop' => 'merchantProductId', 'default' => ''],
+        'id' => ['type' => 'string', 'prop' => 'sku', 'default' => ''],
+        'image' => ['type' => 'string', 'prop' => 'image-url', 'default' => ''],
+    ];
+
     /**
      * @method __construct
      */
@@ -213,8 +236,6 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
     {
 
 
-
-
 //
 //        $_params = array_merge([
 //            'website-id' => $this->_website_id,
@@ -279,6 +300,8 @@ class CommissionJunction extends AbstractNetwork implements NetworkInterface
 
         foreach ($products->products->product as $productItem) {
             $Product = Product::createInstance();
+            $this->propertyMapper($Product, $productItem);
+
             if (property_exists($productItem, 'name')) {
                 $Product->name = (string)$productItem->name;//'Danava',
             }
